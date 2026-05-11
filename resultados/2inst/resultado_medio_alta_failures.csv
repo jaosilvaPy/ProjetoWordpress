@@ -1,0 +1,3 @@
+Method,Name,Error,Occurrences
+GET,Imagem 253kb (pagina),500 Server Error: Internal Server Error for url: Imagem 253kb (pagina),1091
+GET,Texto leve,500 Server Error: Internal Server Error for url: Texto leve,965

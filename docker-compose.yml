@@ -1,0 +1,89 @@
+services:
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppassword
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  wordpress1:
+    image: wordpress:5.4.2-php7.2-apache
+    depends_on:
+      - mysql
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppassword
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_CONFIG_EXTRA: |
+        @ini_set('max_execution_time', '300');
+        @ini_set('upload_max_filesize', '64M');
+        @ini_set('post_max_size', '64M');
+    volumes:
+      - ./html:/var/www/html
+
+  wordpress2:
+    image: wordpress:5.4.2-php7.2-apache
+    depends_on:
+      - mysql
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppassword
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_CONFIG_EXTRA: |
+        @ini_set('max_execution_time', '300');
+        @ini_set('upload_max_filesize', '64M');
+        @ini_set('post_max_size', '64M');
+    volumes:
+      - ./html:/var/www/html
+
+  wordpress3:
+    image: wordpress:5.4.2-php7.2-apache
+    depends_on:
+      - mysql
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppassword
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_CONFIG_EXTRA: |
+        @ini_set('max_execution_time', '300');
+        @ini_set('upload_max_filesize', '64M');
+        @ini_set('post_max_size', '64M');
+    volumes:
+      - ./html:/var/www/html
+
+  nginx:
+    image: nginx:1.19.0
+    ports:
+      - "80:80"
+    depends_on:
+      - wordpress1
+      - wordpress2
+      - wordpress3
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./html:/usr/share/nginx/html
+
+  locust:
+    image: grubykarol/locust
+    ports:
+      - "8080:8089"
+    environment:
+      ATTACKED_HOST: http://nginx
+      LOCUST_FILE: locustfile_leve.py
+    volumes:
+      - ./locustfile_leve.py:/locust/locustfile_leve.py
+      - ./locustfile_medio.py:/locust/locustfile_medio.py
+      - ./locustfile_alto.py:/locust/locustfile_alto.py
+      - ./resultados:/locust/resultados
+    depends_on:
+      - nginx
+
+volumes:
+  mysql_data:
+    driver: local
