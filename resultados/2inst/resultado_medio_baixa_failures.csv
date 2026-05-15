@@ -1,1 +1,3 @@
 Method,Name,Error,Occurrences
+GET,Imagem 253kb (arquivo),502 Server Error: Bad Gateway for url: Imagem 253kb (arquivo),6
+GET,Imagem 253kb (pagina),502 Server Error: Bad Gateway for url: Imagem 253kb (pagina),6

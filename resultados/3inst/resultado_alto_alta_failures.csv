@@ -1,4 +1,15 @@
 Method,Name,Error,Occurrences
-GET,Imagem 253kb (pagina),500 Server Error: Internal Server Error for url: Imagem 253kb (pagina),608
-GET,Imagem 530kb (pagina),500 Server Error: Internal Server Error for url: Imagem 530kb (pagina),619
-GET,Texto leve,500 Server Error: Internal Server Error for url: Texto leve,594
+GET,Imagem 530kb (pagina),504 Server Error: Gateway Time-out for url: Imagem 530kb (pagina),5
+GET,Imagem 530kb (pagina),"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",1
+GET,Texto leve,502 Server Error: Bad Gateway for url: Texto leve,176
+GET,Imagem 253kb (arquivo),"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",15
+GET,Imagem 253kb (arquivo),"HTTPConnectionPool(host='nginx', port=80): Max retries exceeded with url: /wp-content/uploads/2026/05/FotoJaoeAnaCastelao_11zon_11zon-1-683x1024.jpg (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b007b5fbdf0>: Failed to establish a new connection: [Errno -3] Try again'))",1
+GET,Imagem 530kb (pagina),502 Server Error: Bad Gateway for url: Imagem 530kb (pagina),147
+GET,Imagem 253kb (arquivo),502 Server Error: Bad Gateway for url: Imagem 253kb (arquivo),15
+GET,Imagem 530kb (arquivo),"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",16
+GET,Imagem 253kb (pagina),"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",3
+GET,Imagem 530kb (arquivo),502 Server Error: Bad Gateway for url: Imagem 530kb (arquivo),10
+GET,Imagem 530kb (arquivo),"HTTPConnectionPool(host='nginx', port=80): Max retries exceeded with url: /wp-content/uploads/2026/04/Captura-de-tela-2026-04-27-181334-1024x576.png (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b007b6428e0>: Failed to establish a new connection: [Errno -3] Try again'))",1
+GET,Texto leve,"HTTPConnectionPool(host='nginx', port=80): Max retries exceeded with url: /?p=1 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b007b0fec10>: Failed to establish a new connection: [Errno -3] Try again'))",4
+GET,Imagem 253kb (pagina),502 Server Error: Bad Gateway for url: Imagem 253kb (pagina),160
+GET,Imagem 530kb (pagina),"HTTPConnectionPool(host='nginx', port=80): Max retries exceeded with url: /?p=5 (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b007b728b80>: Failed to establish a new connection: [Errno -3] Try again'))",4

@@ -13,15 +13,15 @@ CENARIOS = ["leve", "medio", "alto"]
 CARGAS = ["100", "200", "350"]
 
 NOMES_CENARIO = {
-    "leve": "Texto Leve",
+    "leve":  "Texto Leve",
     "medio": "Imagem 253kb",
-    "alto": "Imagem 500kb",
+    "alto":  "Imagem 500kb",
 }
 
 NOMES_ARQ = {
-    "1inst": "1 Instancia",
-    "2inst": "2 Instancias",
-    "3inst": "3 Instancias",
+    "1inst": "1 Instância",
+    "2inst": "2 Instâncias",
+    "3inst": "3 Instâncias",
 }
 
 CORES = {
@@ -30,218 +30,243 @@ CORES = {
     "3inst": "#27AE60",
 }
 
+CORES_CARGA = {
+    "100": "#3498DB",
+    "200": "#9B59B6",
+    "350": "#E67E22",
+}
 
+
+# ---------------------------------------------------------------
 def ler_stats(arq, cenario, carga):
-    # Mapeia o numero da carga
     mapear_carga = {"100": "baixa", "200": "media", "350": "alta"}
     nome_carga = mapear_carga.get(carga)
-
-    # O nome do arquivo
     nome_arquivo = f"resultado_{cenario}_{nome_carga}_stats.csv"
-
     path = os.path.join(RESULTADOS, arq, nome_arquivo)
 
     if not os.path.exists(path):
-        print(f"Aviso: Arquivo não encontrado -> {path}")
+        print(f"  Aviso: não encontrado -> {path}")
         return None
 
     try:
         df = pd.read_csv(path)
         row = df[df["Name"] == "Aggregated"]
-        if row.empty:
-            return None
-        return row.iloc[0]
+        return row.iloc[0] if not row.empty else None
     except Exception as e:
-        print(f"Erro ao ler {nome_arquivo}: {e}")
+        print(f"  Erro ao ler {nome_arquivo}: {e}")
         return None
 
 
 def salvar(fig, nome):
     path = os.path.join(GRAFICOS, nome)
-    fig.savefig(path, dpi=300, bbox_inches='tight')
+    fig.savefig(path, dpi=300, bbox_inches="tight")
     plt.close(fig)
-    print(f"Salvo: {path}")
+    print(f"  Salvo: {path}")
 
 
-print("\n [1] TEMPO DE RESPOSTA MÉDIO POR NÚMERO DE USUÁRIOS")
+# ---------------------------------------------------------------
+# BLOCO A — Eixo X = Número de Usuários  |  Linhas = Instâncias
+#           Cada instância: linha sólida (Média) + linha tracejada (P95)
+# ---------------------------------------------------------------
+print("\n[A] TEMPO DE RESPOSTA vs USUÁRIOS (Média + P95) — linha por instância")
+
 for cenario in CENARIOS:
-    fig, ax = plt.subplots(figsize=(9, 5))
+    fig, ax = plt.subplots(figsize=(10, 5.5))
+
     for arq in ARQUITETURAS:
-        y = []
-        x = []
+        x_vals, y_avg, y_p95 = [], [], []
+
         for carga in CARGAS:
             r = ler_stats(arq, cenario, carga)
             if r is not None:
-                x.append(int(carga))
-                y.append(r["Average Response Time"])
-        if x:
-            ax.plot(x, y, marker="o",
-                    label=NOMES_ARQ[arq],
-                    color=CORES[arq],
-                    linewidth=2)
+                x_vals.append(int(carga))
+                y_avg.append(r["Average Response Time"])
+                # Coluna P95 nos CSVs do Locust chama-se "95%"
+                p95_val = r.get("95%", None)
+                y_p95.append(p95_val if p95_val is not None else float("nan"))
+
+        if x_vals:
+            cor = CORES[arq]
+            label = NOMES_ARQ[arq]
+            ax.plot(x_vals, y_avg,
+                    marker="o", color=cor, linewidth=2,
+                    label=f"{label} — Média")
+            ax.plot(x_vals, y_p95,
+                    marker="s", color=cor, linewidth=2,
+                    linestyle="--",
+                    label=f"{label} — P95")
 
     ax.set_title(
-        f"Tempo de Resposta Médio - {NOMES_CENARIO[cenario]}", fontsize=13, fontweight="bold")
+        f"Tempo de Resposta vs Usuários — {NOMES_CENARIO[cenario]}",
+        fontsize=13, fontweight="bold")
     ax.set_xlabel("Número de Usuários", fontsize=11)
-    ax.set_ylabel("Tempo de Resposta Médio (ms)", fontsize=11)
+    ax.set_ylabel("Tempo de Resposta (ms)", fontsize=11)
     ax.set_xticks([100, 200, 350])
-    ax.legend()
-    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.legend(fontsize=9, ncol=2)
+    ax.grid(True, linestyle="--", alpha=0.5)
     fig.tight_layout()
-    salvar(fig, f"tempo_resposta_medio_{cenario}.png")
+    salvar(fig, f"A_tempo_vs_usuarios_{cenario}.png")
 
 
-print("\n [2] REQUISIÇÕES POR SEGUNDO POR NUMERO DE USUARIOS")
+# ---------------------------------------------------------------
+# BLOCO B — Eixo X = Número de Instâncias  |  Linhas = Cargas
+#           Cada carga: linha sólida (Média) + linha tracejada (P95)
+# ---------------------------------------------------------------
+print("\n[B] TEMPO DE RESPOSTA vs INSTÂNCIAS (Média + P95) — linha por carga")
+
+x_inst = [1, 2, 3]
+
 for cenario in CENARIOS:
-    fig, ax = plt.subplots(figsize=(9, 5))
+    fig, ax = plt.subplots(figsize=(10, 5.5))
+
+    for carga in CARGAS:
+        y_avg, y_p95 = [], []
+
+        for arq in ARQUITETURAS:
+            r = ler_stats(arq, cenario, carga)
+            if r is not None:
+                y_avg.append(r["Average Response Time"])
+                p95_val = r.get("95%", None)
+                y_p95.append(p95_val if p95_val is not None else float("nan"))
+            else:
+                y_avg.append(None)
+                y_p95.append(None)
+
+        # filtra None mantendo alinhamento com x_inst
+        x_a, ya_c, yp_c = zip(*[
+            (x_inst[i], y_avg[i], y_p95[i])
+            for i in range(3)
+            if y_avg[i] is not None
+        ]) if any(v is not None for v in y_avg) else ([], [], [])
+
+        if x_a:
+            cor = CORES_CARGA[carga]
+            label = f"{carga} usuários"
+            ax.plot(x_a, ya_c,
+                    marker="o", color=cor, linewidth=2,
+                    label=f"{label} — Média")
+            ax.plot(x_a, yp_c,
+                    marker="s", color=cor, linewidth=2,
+                    linestyle="--",
+                    label=f"{label} — P95")
+
+    ax.set_title(
+        f"Tempo de Resposta vs Instâncias — {NOMES_CENARIO[cenario]}",
+        fontsize=13, fontweight="bold")
+    ax.set_xlabel("Número de Instâncias WordPress", fontsize=11)
+    ax.set_ylabel("Tempo de Resposta (ms)", fontsize=11)
+    ax.set_xticks([1, 2, 3])
+    ax.legend(fontsize=9, ncol=2)
+    ax.grid(True, linestyle="--", alpha=0.5)
+    fig.tight_layout()
+    salvar(fig, f"B_tempo_vs_instancias_{cenario}.png")
+
+
+# ---------------------------------------------------------------
+# BLOCO C — RPS vs Usuários  |  Linhas = Instâncias
+# ---------------------------------------------------------------
+print("\n[C] RPS vs USUÁRIOS — linha por instância")
+
+for cenario in CENARIOS:
+    fig, ax = plt.subplots(figsize=(10, 5.5))
+
     for arq in ARQUITETURAS:
-        y = []
-        x = []
+        x_vals, y_rps = [], []
         for carga in CARGAS:
             r = ler_stats(arq, cenario, carga)
             if r is not None:
-                x.append(int(carga))
-                y.append(r["Requests/s"])
-        if x:
-            ax.plot(x, y, marker="o",
-                    label=NOMES_ARQ[arq],
-                    color=CORES[arq],
-                    linewidth=2)
+                x_vals.append(int(carga))
+                y_rps.append(r["Requests/s"])
+        if x_vals:
+            ax.plot(x_vals, y_rps,
+                    marker="o", color=CORES[arq], linewidth=2,
+                    label=NOMES_ARQ[arq])
+
     ax.set_title(
-        f"Requisições por Segundo - {NOMES_CENARIO[cenario]}", fontsize=13, fontweight="bold")
+        f"Requisições por Segundo vs Usuários — {NOMES_CENARIO[cenario]}",
+        fontsize=13, fontweight="bold")
     ax.set_xlabel("Número de Usuários", fontsize=11)
     ax.set_ylabel("Requisições por Segundo", fontsize=11)
     ax.set_xticks([100, 200, 350])
     ax.legend()
-    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.grid(True, linestyle="--", alpha=0.5)
     fig.tight_layout()
-    salvar(fig, f"requisicoes_por_segundo_{cenario}.png")
+    salvar(fig, f"C_rps_vs_usuarios_{cenario}.png")
 
 
-print("\n [3] TAXA DE FALHAS POR NÚMERO DE USUÁRIOS")
+# ---------------------------------------------------------------
+# BLOCO D — RPS vs Instâncias  |  Linhas = Cargas
+# ---------------------------------------------------------------
+print("\n[D] RPS vs INSTÂNCIAS — linha por carga")
+
 for cenario in CENARIOS:
-    fig, ax = plt.subplots(figsize=(9, 5))
+    fig, ax = plt.subplots(figsize=(10, 5.5))
+
+    for carga in CARGAS:
+        y_rps = []
+        for arq in ARQUITETURAS:
+            r = ler_stats(arq, cenario, carga)
+            y_rps.append(r["Requests/s"] if r is not None else None)
+
+        x_c, y_c = zip(*[
+            (x_inst[i], y_rps[i])
+            for i in range(3)
+            if y_rps[i] is not None
+        ]) if any(v is not None for v in y_rps) else ([], [])
+
+        if x_c:
+            ax.plot(x_c, y_c,
+                    marker="o", color=CORES_CARGA[carga], linewidth=2,
+                    label=f"{carga} usuários")
+
+    ax.set_title(
+        f"RPS vs Instâncias — {NOMES_CENARIO[cenario]}",
+        fontsize=13, fontweight="bold")
+    ax.set_xlabel("Número de Instâncias WordPress", fontsize=11)
+    ax.set_ylabel("Requisições por Segundo", fontsize=11)
+    ax.set_xticks([1, 2, 3])
+    ax.legend()
+    ax.grid(True, linestyle="--", alpha=0.5)
+    fig.tight_layout()
+    salvar(fig, f"D_rps_vs_instancias_{cenario}.png")
+
+
+# ---------------------------------------------------------------
+# BLOCO E — Taxa de Falhas vs Usuários  |  Linhas = Instâncias
+# ---------------------------------------------------------------
+print("\n[E] TAXA DE FALHAS vs USUÁRIOS — linha por instância")
+
+for cenario in CENARIOS:
+    fig, ax = plt.subplots(figsize=(10, 5.5))
+
     for arq in ARQUITETURAS:
-        y = []
-        x = []
+        x_vals, y_pct = [], []
         for carga in CARGAS:
             r = ler_stats(arq, cenario, carga)
             if r is not None:
                 reqs = r["Request Count"]
                 falhas = r["Failure Count"]
                 pct = (falhas / reqs * 100) if reqs > 0 else 0
-                x.append(int(carga))
-                y.append(pct)
-        if x:
-            ax.plot(x, y, marker="^",
-                    label=NOMES_ARQ[arq],
-                    color=CORES[arq],
-                    linewidth=2)
+                x_vals.append(int(carga))
+                y_pct.append(pct)
+        if x_vals:
+            ax.plot(x_vals, y_pct,
+                    marker="^", color=CORES[arq], linewidth=2,
+                    label=NOMES_ARQ[arq])
 
     ax.set_title(
-        f"Taxa de Falhas - {NOMES_CENARIO[cenario]}", fontsize=13, fontweight="bold")
+        f"Taxa de Falhas vs Usuários — {NOMES_CENARIO[cenario]}",
+        fontsize=13, fontweight="bold")
     ax.set_xlabel("Número de Usuários", fontsize=11)
     ax.set_ylabel("Falhas (%)", fontsize=11)
     ax.set_xticks([100, 200, 350])
     ax.set_ylim(0, 100)
     ax.legend()
-    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.grid(True, linestyle="--", alpha=0.5)
     fig.tight_layout()
-    salvar(fig, f"falhas_{cenario}.png")
+    salvar(fig, f"E_falhas_vs_usuarios_{cenario}.png")
 
-print("\n [4] TEMPO DE RESPOSTA POR NUMERO DE INSTANCIAS")
 
-x_inst = [1, 2, 3]
-
-for cenario in CENARIOS:
-    fig, ax = plt.subplots(figsize=(9, 5))
-
-    for carga in CARGAS:
-        y = []
-
-        for arq in ARQUITETURAS:
-            r = ler_stats(arq, cenario, carga)
-
-            if r is not None:
-                y.append(r["Average Response Time"])
-            else:
-                y.append(None)
-
-        y_clean = [v for v in y if v is not None]
-        x_clean = [x_inst[i] for i, v in enumerate(y) if v is not None]
-
-        if x_clean:
-            ax.plot(
-                x_clean,
-                y_clean,
-                marker="o",
-                label=f"{carga} usuarios",
-                linewidth=2
-            )
-
-    ax.set_title(
-        f"Tempo de Resposta Médio por Número de Instâncias - {NOMES_CENARIO[cenario]}",
-        fontsize=13,
-        fontweight="bold"
-    )
-
-    ax.set_xlabel("Número de Instâncias", fontsize=11)
-    ax.set_ylabel("Tempo de Resposta Médio (ms)", fontsize=11)
-
-    ax.set_xticks([1, 2, 3])
-
-    ax.legend()
-    ax.grid(True, linestyle='--', alpha=0.5)
-
-    fig.tight_layout()
-
-    salvar(fig, f"tempo_por_instancias_{cenario}.png")
-
-print("\n [5] RPS por numero de instancias")
-
-for cenario in CENARIOS:
-    fig, ax = plt.subplots(figsize=(9, 5))
-
-    for carga in CARGAS:
-        y = []
-
-        for arq in ARQUITETURAS:
-            r = ler_stats(arq, cenario, carga)
-
-            if r is not None:
-                y.append(r["Requests/s"])
-            else:
-                y.append(None)
-
-        y_clean = [v for v in y if v is not None]
-        x_clean = [x_inst[i] for i, v in enumerate(y) if v is not None]
-
-        if x_clean:
-            ax.plot(
-                x_clean,
-                y_clean,
-                marker="o",
-                label=f"{carga} usuarios",
-                linewidth=2
-            )
-
-    ax.set_title(
-        f"RPS por Instâncias - {NOMES_CENARIO[cenario]}",
-        fontsize=13,
-        fontweight="bold"
-    )
-
-    ax.set_xlabel("Número de Instâncias Wordpress", fontsize=11)
-    ax.set_ylabel("Requests/s", fontsize=11)
-
-    ax.set_xticks([1, 2, 3])
-
-    ax.legend()
-    ax.grid(True, linestyle='--', alpha=0.5)
-
-    fig.tight_layout()
-
-    salvar(fig, f"rps_por_instancias_{cenario}.png")
-
-print(f"\n TODOS OS GRÁFICOS SALVOS EM {GRAFICOS}")
-print(f"TOTAL: {len(os.listdir(GRAFICOS))} arquivos")
+# ---------------------------------------------------------------
+print(f"\n TODOS OS GRÁFICOS SALVOS EM {GRAFICOS}/")
+print(f" TOTAL: {len(os.listdir(GRAFICOS))} arquivos")

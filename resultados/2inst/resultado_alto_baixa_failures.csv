@@ -1,1 +1,6 @@
 Method,Name,Error,Occurrences
+GET,Texto leve,502 Server Error: Bad Gateway for url: Texto leve,1
+GET,Imagem 530kb (pagina),502 Server Error: Bad Gateway for url: Imagem 530kb (pagina),3
+GET,Imagem 253kb (arquivo),502 Server Error: Bad Gateway for url: Imagem 253kb (arquivo),3
+GET,Imagem 530kb (arquivo),502 Server Error: Bad Gateway for url: Imagem 530kb (arquivo),3
+GET,Imagem 253kb (pagina),502 Server Error: Bad Gateway for url: Imagem 253kb (pagina),3

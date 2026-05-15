@@ -1,1 +1,4 @@
 Method,Name,Error,Occurrences
+GET,Imagem 253kb (pagina),504 Server Error: Gateway Time-out for url: Imagem 253kb (pagina),49
+GET,Texto leve,504 Server Error: Gateway Time-out for url: Texto leve,34
+GET,Imagem 253kb (arquivo),504 Server Error: Gateway Time-out for url: Imagem 253kb (arquivo),1

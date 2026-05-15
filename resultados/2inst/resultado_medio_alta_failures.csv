@@ -1,3 +1,4 @@
 Method,Name,Error,Occurrences
-GET,Imagem 253kb (pagina),500 Server Error: Internal Server Error for url: Imagem 253kb (pagina),1091
-GET,Texto leve,500 Server Error: Internal Server Error for url: Texto leve,965
+GET,Texto leve,502 Server Error: Bad Gateway for url: Texto leve,283
+GET,Imagem 253kb (arquivo),502 Server Error: Bad Gateway for url: Imagem 253kb (arquivo),308
+GET,Imagem 253kb (pagina),502 Server Error: Bad Gateway for url: Imagem 253kb (pagina),282
